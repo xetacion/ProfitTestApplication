@@ -15,6 +15,7 @@
             <th>Date of Birth</td>
             <th>Username</td>
             <th>Password</td>
+            <th>New Password</td>
         </tr>
       	<c:forEach items="${tableData}" var="row">
 	  	<tr>
@@ -24,7 +25,8 @@
         		<td><input type="text" name="lastname" value=${row[2]} /></td>
         		<td><input type="text" name="dateofbirth" value=${row[3]} /></td>
         		<td><input type="text" name="username" value=${row[4]} /></td>
-        		<td><input type="text" name="password" value=${row[5]} /></td>
+        		<td><input type="text" name="oldpassword" value=${row[5]} readonly="readonly" /></td>
+        		<td><input type="password" name="password" /></td>
         		<td><input type="submit" name="action" value="Update"> <input type="submit" name="action" value="Delete"></td>
        		</form> 	
        	</tr>

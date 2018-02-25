@@ -20,7 +20,7 @@ public class Main extends HttpServlet{
 	protected void doGet(HttpServletRequest request, HttpServletResponse response) 
 			throws ServletException, IOException {
 		
-		Connection conn = null; 
+		Connection conn = null;
 	    DatabaseActions dba = new DatabaseActions();
 		try {
 			Class.forName(JDBC_DRIVER);

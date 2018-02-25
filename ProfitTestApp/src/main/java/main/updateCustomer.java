@@ -33,7 +33,7 @@ static final long serialVersionUID = 3L;
 			request.getSession().removeAttribute("tableErrorMessage");
 			if(action.equals("Update")) {
 				int correctnessResult = dba.checkDataCorrectness(firstname, lastname, dateofbirth, username, password);
-				if(correctnessResult == 0) {
+				if(correctnessResult == 0 || (correctnessResult == -4 && password.length() == 0)) {
 					dba.updateCustomer(conn, id, firstname, lastname, dateofbirth, username, password);
 				} else {
 					request.getSession().setAttribute("tableErrorMessage", "Inserted data was invalid!");

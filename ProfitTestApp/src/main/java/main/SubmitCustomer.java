@@ -38,13 +38,14 @@ public class SubmitCustomer extends HttpServlet {
 	        if(correctnessResult == 0 && password.equals(repeatPassword)) {
 	        	dba.insertCustomer(conn, firstname, lastname, dateofbirth, username, password);
 	        } else {
-				if(correctnessResult == -1) {
+				if(correctnessResult == -1 || correctnessResult == -3) {
 					request.getSession().setAttribute("dateErrorMessage", "Inserted date in wrong format!");
 				} else if(correctnessResult == -2) {
 					request.getSession().setAttribute("dateErrorMessage", "Inserted date in wrong format!");
 					request.getSession().setAttribute("passwordErrorMessage", "Password needs to be minimum eight characters, contain at least one letter and one number!");
-				} else if(correctnessResult == -3) {
+				} else if(correctnessResult == -4) {
 					request.getSession().setAttribute("passwordErrorMessage", "Password needs to be minimum eight characters, contain at least one letter and one number!");
+				} else {
 					request.getSession().setAttribute("errorMessage", "Inserted data was invalid!");
 				}
 			}

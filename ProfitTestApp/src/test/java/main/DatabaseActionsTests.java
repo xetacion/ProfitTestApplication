@@ -160,16 +160,50 @@ public class DatabaseActionsTests {
 	}
 	
 	@Test
-	public void testCheckDataInvalid() {
+	public void testCheckDateInvalid() {
 		String invalidDateofbirth = "2012-33-55";
 		int correctness = dba.checkDataCorrectness(firstname, lastname, invalidDateofbirth, username, password);
-		assertNotEquals(0, correctness);
+		assertEquals(-3, correctness);
+	}
+	
+	@Test
+	public void testCheckDateInvalidFormat() {
+		String invalidDateofbirth = "2012-11";
+		int correctness = dba.checkDataCorrectness(firstname, lastname, invalidDateofbirth, username, password);
+		assertEquals(-1, correctness);
+	}
+	
+	@Test
+	public void testCheckDateInvalidPassword() {
+		String invalidPassword = "tooEasy";
+		int correctness = dba.checkDataCorrectness(firstname, lastname, dateofbirth, username, invalidPassword);
+		assertEquals(-4, correctness);
+	}
+	
+	@Test
+	public void testCheckDateInvalidFormatAndPassword() {
+		String invalidDateofbirth = "2012-11";
+		String invalidPassword = "tooEasy";
+		int correctness = dba.checkDataCorrectness(firstname, lastname, invalidDateofbirth, username, invalidPassword);
+		assertEquals(-2, correctness);
+	}
+	
+	@Test
+	public void testEmptyFirstName() {
+		int correctness = dba.checkDataCorrectness("", lastname, dateofbirth, username, password);
+		assertEquals(-5, correctness);
 	}
 	
 	@Test
 	public void testCheckDataValid() {
 		int correctness = dba.checkDataCorrectness(firstname, lastname, dateofbirth, username, password);
 		assertEquals(0, correctness);
+	}
+	
+	@Test
+	public void testHashRightLength() { 
+		String hashedWord = dba.generateHash("randomHash");
+		assertEquals(40, hashedWord.length());
 	}
 	
 	@AfterClass
