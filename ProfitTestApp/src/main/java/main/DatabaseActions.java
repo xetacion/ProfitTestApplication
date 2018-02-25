@@ -1,12 +1,13 @@
 package main;
 
 import java.sql.Connection;
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.sql.Statement;
 import java.text.Format;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -15,9 +16,8 @@ import javax.servlet.http.HttpServletRequest;
 public class DatabaseActions {
 	
 	public void createTableifNeeded(Connection conn) {
-		Statement stmt = null; 
+		PreparedStatement pstmt = null; 
 		try {
-			stmt = conn.createStatement(); 
 			String sql =  "CREATE TABLE IF NOT EXISTS Customer ( " +
 					"ID INT PRIMARY KEY AUTO_INCREMENT, " +
 					"FirstName VARCHAR(255), " + 
@@ -25,20 +25,21 @@ public class DatabaseActions {
 					"DateofBirth DATE, " +
 					"Username VARCHAR(255)," + 
 					"Password VARCHAR(255))";
-			stmt.executeUpdate(sql);
+			pstmt = conn.prepareStatement(sql);
+			pstmt.executeUpdate();
 		} catch (SQLException e) {
 			e.printStackTrace();
 		}
 	}
 	
 	public void readTable(Connection conn, HttpServletRequest request) {
-		Statement stmt = null; 
+		PreparedStatement pstmt = null; 
 		ResultSet rs = null;
 		ArrayList<String[]> tableData = new ArrayList<String[]>();
 		try {
-			stmt = conn.createStatement(); 
-			String sql = "SELECT * FROM Customer"; 
-			rs = stmt.executeQuery(sql);
+			String sql = "SELECT * FROM Customer";
+			pstmt = conn.prepareStatement(sql);
+			rs = pstmt.executeQuery();
 			Format formatter = new SimpleDateFormat("yyyy-MM-dd");
 			while(rs.next()) { 
 	            String id  = Integer.toString(rs.getInt("ID")); 
@@ -58,12 +59,17 @@ public class DatabaseActions {
 	
 	public void insertCustomer(Connection conn, String firstname, String lastname, String dateofbirth, String username,
 			String password) {
-		Statement stmt = null;
+		PreparedStatement pstmt = null;
 		try {
-			stmt = conn.createStatement();
 			String sql = "INSERT INTO Customer(FirstName, LastName, DateofBirth, Username, Password) "
-					+ "VALUES('" + firstname + "','" + lastname + "','" + dateofbirth + "','" + username + "','" + password + "')";
-			stmt.executeUpdate(sql);
+					+ "VALUES(?, ?, ?, ?, ?)";
+			pstmt = conn.prepareStatement(sql);
+			pstmt.setString(1, firstname);
+			pstmt.setString(2, lastname);
+			pstmt.setString(3, dateofbirth);
+			pstmt.setString(4, username);
+			pstmt.setString(5, password);
+			pstmt.executeUpdate();
 		} catch (SQLException e) {
 			e.printStackTrace();
 		}
@@ -72,40 +78,63 @@ public class DatabaseActions {
 
 	public void updateCustomer(Connection conn, String id, String firstname, String lastname, String dateofbirth, String username,
 	String password) {
-		Statement stmt = null;
+		PreparedStatement pstmt = null;
 		try {
-			stmt = conn.createStatement();
-			String sql = "UPDATE Customer SET FirstName = '" + firstname + "', LastName = '" + lastname + "', DateofBirth = '" + dateofbirth + 
-					"', Username = '" + username + "', Password = '" + password + "' WHERE ID = " + id;
-			stmt.executeUpdate(sql);
+			String sql = "UPDATE Customer SET FirstName = ?, LastName = ?, DateofBirth = ?," +
+					" Username = ?, Password = ? WHERE ID = ?";
+			pstmt = conn.prepareStatement(sql);
+			pstmt.setString(1, firstname);
+			pstmt.setString(2, lastname);
+			pstmt.setString(3, dateofbirth);
+			pstmt.setString(4, username);
+			pstmt.setString(5, password);
+			pstmt.setString(6, id);
+			pstmt.executeUpdate();
 		} catch (SQLException e) {
 			e.printStackTrace();
 		}
 	}
 	
 	public void deleteCustomer(Connection conn, String id) {
-		Statement stmt = null;
+		PreparedStatement pstmt = null;
 		try {
-			stmt = conn.createStatement();
-			String sql = "DELETE FROM Customer WHERE ID = " + id;
-			stmt.executeUpdate(sql);
+			String sql = "DELETE FROM Customer WHERE ID = ?";
+			pstmt = conn.prepareStatement(sql);
+			pstmt.setString(1, id);
+			pstmt.executeUpdate();
 		} catch (SQLException e) {
 			e.printStackTrace();
 		}
 	}
 	
-	public boolean checkDataCorrectness(String firstname, String lastname, String dateofbirth, String username,
+	public int checkDataCorrectness(String firstname, String lastname, String dateofbirth, String username,
 			String password) {
-		Pattern p = Pattern.compile("\\d{4}-\\d{2}-\\d{2}");
-        Matcher m = p.matcher(dateofbirth);
+		Pattern datePattern = Pattern.compile("\\d{4}-\\d{2}-\\d{2}");
+        Matcher dateMatcher = datePattern.matcher(dateofbirth);
+        Pattern passwordPattern = Pattern.compile("^(?=.*[A-Za-z])(?=.*\\d)[A-Za-z\\d]{8,}$");
+        Matcher passwordMatcher = passwordPattern.matcher(password);
         if(firstname.length() > 0 && lastname.length() > 0 && username.length() > 0
-        		&& password.length() > 0 && m.matches()) {
-        	int birthMonth = Integer.parseInt(dateofbirth.subSequence(5, 7).toString());
-            int birthDay = Integer.parseInt(dateofbirth.subSequence(9, 10).toString());
-        	if(birthMonth > 0 && birthMonth <= 12 && birthDay > 0 && birthDay <= 31) {
-        		return true;
+        		&& password.length() > 0) {
+        	if(dateMatcher.matches()) {
+        		if(passwordMatcher.matches()) {
+		        	int year = Calendar.getInstance().get(Calendar.YEAR);
+		        	int birthYear = Integer.parseInt(dateofbirth.subSequence(0, 4).toString());
+		        	int birthMonth = Integer.parseInt(dateofbirth.subSequence(5, 7).toString());
+		            int birthDay = Integer.parseInt(dateofbirth.subSequence(9, 10).toString());
+		        	if( birthYear >= 1900 && birthYear <= year && birthMonth > 0 && birthMonth <= 12 && birthDay > 0 && birthDay <= 31) {
+		        		return 0;
+		        	}
+        		} else {
+        			return -3;
+        		}
+        	} else {
+        		if(passwordMatcher.matches()) {
+        			return -1;
+        		} else {
+        			return -2;
+        		}
         	}
         } 
-		return false;
+		return -4;
 	}
 }

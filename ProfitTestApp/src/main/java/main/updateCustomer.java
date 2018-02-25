@@ -5,7 +5,6 @@ import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 
-import javax.servlet.RequestDispatcher;
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
@@ -31,22 +30,22 @@ static final long serialVersionUID = 3L;
 		try {
 			Class.forName(Main.JDBC_DRIVER);
 			conn = DriverManager.getConnection(Main.DB_URL, Main.USER, Main.PASS);
-			if(dba.checkDataCorrectness(firstname, lastname, dateofbirth, username, password)) {
-				if(action.equals("Update")) {
+			request.getSession().removeAttribute("tableErrorMessage");
+			if(action.equals("Update")) {
+				int correctnessResult = dba.checkDataCorrectness(firstname, lastname, dateofbirth, username, password);
+				if(correctnessResult == 0) {
 					dba.updateCustomer(conn, id, firstname, lastname, dateofbirth, username, password);
 				} else {
-					dba.deleteCustomer(conn, id);
+					request.getSession().setAttribute("tableErrorMessage", "Inserted data was invalid!");
 				}
+			} else {
+				dba.deleteCustomer(conn, id);
 			}
 			
 			dba.readTable(conn, request);
 			
 			conn.close();
-			
-			RequestDispatcher dispatcher 
-	         = this.getServletContext().getRequestDispatcher("/WEB-INF/views/index.jsp");
-
-			 dispatcher.forward(request, response);
+			response.sendRedirect(request.getContextPath() + "/");
 		} catch (ClassNotFoundException e) {
 			e.printStackTrace();
 		} catch (SQLException e) {

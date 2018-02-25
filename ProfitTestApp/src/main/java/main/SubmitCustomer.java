@@ -5,7 +5,6 @@ import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 
-import javax.servlet.RequestDispatcher;
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
@@ -25,22 +24,34 @@ public class SubmitCustomer extends HttpServlet {
 		String dateofbirth = request.getParameter("dateofbirth");
 		String username = request.getParameter("username");
 		String password = request.getParameter("password");
+		String repeatPassword = request.getParameter("repeatPassword");
 		
 		Connection conn = null; 
 	    DatabaseActions dba = new DatabaseActions();
 		try {
 			Class.forName(Main.JDBC_DRIVER);
 	        conn = DriverManager.getConnection(Main.DB_URL, Main.USER, Main.PASS);
-	        if(dba.checkDataCorrectness(firstname, lastname, dateofbirth, username, password)) {
+	        int correctnessResult = dba.checkDataCorrectness(firstname, lastname, dateofbirth, username, password);
+	        request.getSession().removeAttribute("errorMessage");
+	        request.getSession().removeAttribute("passwordErrorMessage");
+	        request.getSession().removeAttribute("dateErrorMessage");
+	        if(correctnessResult == 0 && password.equals(repeatPassword)) {
 	        	dba.insertCustomer(conn, firstname, lastname, dateofbirth, username, password);
-	        }
+	        } else {
+				if(correctnessResult == -1) {
+					request.getSession().setAttribute("dateErrorMessage", "Inserted date in wrong format!");
+				} else if(correctnessResult == -2) {
+					request.getSession().setAttribute("dateErrorMessage", "Inserted date in wrong format!");
+					request.getSession().setAttribute("passwordErrorMessage", "Password needs to be minimum eight characters, contain at least one letter and one number!");
+				} else if(correctnessResult == -3) {
+					request.getSession().setAttribute("passwordErrorMessage", "Password needs to be minimum eight characters, contain at least one letter and one number!");
+					request.getSession().setAttribute("errorMessage", "Inserted data was invalid!");
+				}
+			}
 	        dba.readTable(conn, request);
 	        
 	        conn.close();
-	        RequestDispatcher dispatcher 
-	         = this.getServletContext().getRequestDispatcher("/WEB-INF/views/index.jsp");
-
-			 dispatcher.forward(request, response);
+	        response.sendRedirect(request.getContextPath() + "/");
 	        
 		} catch (ClassNotFoundException e) {
 			e.printStackTrace();

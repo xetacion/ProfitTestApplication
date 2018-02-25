@@ -8,7 +8,9 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 
+import org.junit.After;
 import org.junit.AfterClass;
+import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
@@ -26,7 +28,7 @@ public class DatabaseActionsTests {
 	private String lastname = "Customer";
 	private String dateofbirth = "2018-02-15";
 	private String username = "Test";
-	private String password = "Cust";
+	private String password = "testPassword1";
 	
 	@BeforeClass
 	public static void init() {
@@ -40,8 +42,42 @@ public class DatabaseActionsTests {
 		}
 	}
 	
+	@Before
+	public void createTable() {
+		Statement stmt = null; 
+		try {
+			String sql =  "CREATE TABLE IF NOT EXISTS Customer ( " +
+					"ID INT PRIMARY KEY AUTO_INCREMENT, " +
+					"FirstName VARCHAR(255), " + 
+					"LastName VARCHAR(255), " + 
+					"DateofBirth DATE, " +
+					"Username VARCHAR(255)," + 
+					"Password VARCHAR(255))";
+			stmt = conn.createStatement();
+			stmt.executeUpdate(sql);
+			sql = "INSERT INTO Customer(FirstName, LastName, DateofBirth, Username, Password) "
+					+ "VALUES('" + firstname + "','" + lastname + "','" + dateofbirth + "','" + username + "','" + password + "')";
+			stmt.executeUpdate(sql);
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+	}
+	
+	@After
+	public void dropTable() {
+		Statement stmt = null; 
+		try {
+			String sql =  "DROP TABLE IF EXISTS Customer";
+			stmt = conn.createStatement();
+			stmt.executeUpdate(sql);
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+	}
+	
 	@Test
     public void testTableIsCreated() {
+		dropTable();
         dba.createTableifNeeded(conn);
         String sql = "SELECT COUNT(*) AS count FROM information_schema.tables WHERE table_name = 'CUSTOMER'";
         int tableCount = 0;
@@ -60,9 +96,9 @@ public class DatabaseActionsTests {
 	@Test
 	public void testCustomerIsInserted() {
         
-        dba.insertCustomer(conn, firstname, lastname, dateofbirth, username, password);
+        dba.insertCustomer(conn, "Test2", lastname, dateofbirth, username, password);
         
-        String sql = "SELECT COUNT(*) AS count FROM Customer WHERE firstname = 'Test'";
+        String sql = "SELECT COUNT(*) AS count FROM Customer WHERE firstname = 'Test2'";
         int customerCount = 0;
         try {
 			stmt = conn.createStatement();
@@ -126,14 +162,14 @@ public class DatabaseActionsTests {
 	@Test
 	public void testCheckDataInvalid() {
 		String invalidDateofbirth = "2012-33-55";
-		boolean correctness = dba.checkDataCorrectness(firstname, lastname, invalidDateofbirth, username, password);
-		assertEquals(false, correctness);
+		int correctness = dba.checkDataCorrectness(firstname, lastname, invalidDateofbirth, username, password);
+		assertNotEquals(0, correctness);
 	}
 	
 	@Test
 	public void testCheckDataValid() {
-		boolean correctness = dba.checkDataCorrectness(firstname, lastname, dateofbirth, username, password);
-		assertEquals(true, correctness);
+		int correctness = dba.checkDataCorrectness(firstname, lastname, dateofbirth, username, password);
+		assertEquals(0, correctness);
 	}
 	
 	@AfterClass

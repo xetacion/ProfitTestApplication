@@ -6,6 +6,7 @@
    
    <body>
       <b>Customers</b><br/>
+      <div style="color: #FF0000;">${tableErrorMessage}</div>
       <table border="1">
       	<tr>
             <th>ID</td>
@@ -32,16 +33,21 @@
 	   <br/>
 	   <b>Add new customer: </b> <br/>
 	   <form action="submitCustomer" method="POST">
+	   		<div style="color: #FF0000;">${errorMessage}</div>
   			First name:<br>
   			<input type="text" name="firstname"><br>
   			Last name:<br>
   			<input type="text" name="lastname"><br><br>
   			Date of Birth(yyyy-MM-dd):<br>
+  			<div style="color: #FF0000;">${dateErrorMessage}</div>
   			<input type="text" name="dateofbirth"><br><br>
   			Username:<br>
   			<input type="text" name="username"><br><br>
   			Password:<br>
-  			<input type="text" name="password"><br><br>
+  			<div style="color: #FF0000;">${passwordErrorMessage}</div>
+  			<input type="password" name="password"><br><br>
+  			Repeat Password:<br>
+  			<input type="password" name="repeatPassword"><br><br>
   			<input type="submit" value="Submit">
 		</form> 
    </body>
